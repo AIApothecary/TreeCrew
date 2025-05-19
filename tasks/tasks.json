@@ -1,0 +1,246 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Fork and Setup Agent Zero Repository",
+      "description": "Fork the Agent Zero repository and set up the development environment for the Claude Code Orchestrator as an extension of Agent Zero.",
+      "details": "1. Fork the Agent Zero repository (https://github.com/frdel/agent-zero) to your organization's GitHub account\n2. Clone the forked repository locally\n3. Create a new branch called `orchestrator-integration`\n4. Set up the development environment according to Agent Zero's documentation\n5. Verify the base Agent Zero functionality is working\n6. Create a project structure for the orchestrator extensions\n7. Update README.md to reflect the project's new purpose\n\nThe orchestrator should be implemented as a direct extension of Agent Zero, not as a plugin. This means modifying and extending the codebase while maintaining compatibility with Agent Zero's core functionality.",
+      "testStrategy": "1. Verify successful fork and clone by running Agent Zero's existing tests\n2. Ensure the development environment is properly set up by running the base Agent Zero application\n3. Confirm that the project structure is organized to accommodate the new orchestrator features\n4. Validate that upstream tracking is correctly configured for future updates from the original Agent Zero repository",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Fork the Agent Zero Repository to Organization Account",
+          "description": "Create a fork of the Agent Zero repository to your organization's GitHub account to establish a base for the Claude Code Orchestrator extension.",
+          "dependencies": [],
+          "details": "Navigate to https://github.com/frdel/agent-zero and use GitHub's fork functionality to create a copy in your organization's account. Ensure you have the necessary permissions within your organization to create the fork.",
+          "status": "done",
+          "testStrategy": "Verify the fork was created successfully by checking that the repository appears in your organization's GitHub account with the correct content."
+        },
+        {
+          "id": 2,
+          "title": "Clone the Forked Repository Locally",
+          "description": "Clone the forked repository to your local development machine to begin working on the codebase.",
+          "dependencies": [
+            1
+          ],
+          "details": "Use git clone command with the URL of your forked repository. Example: `git clone https://github.com/your-org/agent-zero.git`. Navigate into the cloned directory afterward.",
+          "status": "done",
+          "testStrategy": "Confirm all files from the repository are present locally and that git remote shows the correct origin pointing to your forked repository."
+        },
+        {
+          "id": 3,
+          "title": "Create and Switch to Orchestrator Integration Branch",
+          "description": "Create a new branch specifically for developing the orchestrator integration features.",
+          "dependencies": [
+            2
+          ],
+          "details": "Run `git checkout -b orchestrator-integration` to create and switch to the new branch. This isolates the orchestrator development from the main branch.",
+          "status": "done",
+          "testStrategy": "Verify you're on the correct branch using `git branch` and that the branch appears when pushing to the remote repository."
+        },
+        {
+          "id": 4,
+          "title": "Set Up Development Environment",
+          "description": "Configure the local development environment according to Agent Zero's documentation to ensure proper functionality.",
+          "dependencies": [
+            3
+          ],
+          "details": "Follow Agent Zero's setup instructions, which typically include installing dependencies, configuring environment variables, and setting up any necessary databases or services. Document any additional dependencies required for the orchestrator extension.",
+          "status": "done",
+          "testStrategy": "Run any provided setup verification scripts or tests to ensure the environment is correctly configured."
+        },
+        {
+          "id": 5,
+          "title": "Verify Base Agent Zero Functionality",
+          "description": "Test the base Agent Zero functionality to ensure it works correctly before making any modifications.",
+          "dependencies": [
+            4
+          ],
+          "details": "Run the application and test core features according to the documentation. Create a checklist of essential functions that must continue working after the orchestrator integration.",
+          "status": "done",
+          "testStrategy": "Execute existing test suites if available. Otherwise, manually test key features and document the results."
+        },
+        {
+          "id": 6,
+          "title": "Design Orchestrator Architecture",
+          "description": "Create a detailed architecture design for how the Claude Code Orchestrator will extend Agent Zero.",
+          "dependencies": [
+            5
+          ],
+          "details": "Design the architecture including component diagrams, data flow, and integration points with Agent Zero. Define the core orchestrator components, their responsibilities, and how they interact with existing Agent Zero modules. Consider scalability, performance, and maintainability in the design.",
+          "status": "pending",
+          "testStrategy": "Review the architecture with team members to validate the approach and identify potential issues early."
+        },
+        {
+          "id": 7,
+          "title": "Create Project Structure for Orchestrator Extensions",
+          "description": "Implement the folder structure and base files needed for the orchestrator extensions.",
+          "dependencies": [
+            6
+          ],
+          "details": "Based on the architecture design, create the necessary directories and files for the orchestrator components. Follow Agent Zero's code organization patterns for consistency. Include placeholder files with appropriate comments to outline the implementation plan.",
+          "status": "pending",
+          "testStrategy": "Review the structure to ensure it aligns with the architecture design and follows Agent Zero's conventions."
+        },
+        {
+          "id": 8,
+          "title": "Implement Core Orchestrator Components",
+          "description": "Develop the fundamental components of the Claude Code Orchestrator that will extend Agent Zero.",
+          "dependencies": [
+            7
+          ],
+          "details": "Implement the core orchestrator classes and functions according to the architecture design. Focus on the essential components needed for basic orchestration functionality. Ensure proper integration with Agent Zero's existing codebase by extending appropriate classes or implementing required interfaces.",
+          "status": "pending",
+          "testStrategy": "Write unit tests for each component to verify they function as expected in isolation."
+        },
+        {
+          "id": 9,
+          "title": "Integrate Orchestrator with Agent Zero",
+          "description": "Connect the orchestrator components with Agent Zero's existing functionality to create a cohesive system.",
+          "dependencies": [
+            8
+          ],
+          "details": "Modify Agent Zero's entry points, configuration, and core modules as needed to incorporate the orchestrator functionality. Ensure backward compatibility with existing Agent Zero features. Add appropriate hooks and extension points for the orchestrator to interact with Agent Zero's workflow.",
+          "status": "pending",
+          "testStrategy": "Create integration tests that verify the orchestrator components work correctly with Agent Zero's existing functionality."
+        },
+        {
+          "id": 10,
+          "title": "Update Documentation and README",
+          "description": "Update the project documentation to reflect the new orchestrator functionality and setup instructions.",
+          "dependencies": [
+            9
+          ],
+          "details": "Modify README.md to describe the project's new purpose as a Claude Code Orchestrator extension of Agent Zero. Include updated installation instructions, usage examples, and configuration options specific to the orchestrator functionality. Document any API changes or extensions. Add architecture diagrams if appropriate.",
+          "status": "pending",
+          "testStrategy": "Have team members follow the documentation to set up and use the system, identifying any unclear or missing information."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Implement Task Manager Core Module",
+      "description": "Create the core Task Manager module that will store, track, and manage tasks and their states throughout the application.",
+      "details": "Develop a Task Manager module that will be the central component for task management:\n\n1. Define a standardized task schema with fields:\n   - id: unique identifier\n   - title: short descriptive name\n   - description: detailed explanation\n   - status: pending/in-progress/completed/error\n   - dependencies: list of task IDs this task depends on\n   - priority: high/medium/low\n   - details: implementation details\n   - testStrategy: validation approach\n   - assignee: agent ID or user\n\n2. Implement core functions:\n   - create_task(): Create a new task\n   - update_task(): Update task properties\n   - get_task(): Retrieve a task by ID\n   - list_tasks(): Get all tasks with optional filtering\n   - delete_task(): Remove a task\n   - change_status(): Update task status\n\n3. Add persistence layer to save tasks to disk (YAML/JSON)\n\n4. Implement dependency tracking to ensure tasks are executed in the correct order\n\nPlace this module in a new directory structure, such as `python/orchestrator/task_manager.py`",
+      "testStrategy": "1. Unit tests for all core functions\n2. Test task creation, retrieval, updating, and deletion\n3. Verify persistence by saving tasks, restarting the application, and confirming tasks are loaded correctly\n4. Test dependency tracking by creating tasks with dependencies and verifying they're respected\n5. Validate the task schema with various inputs including edge cases",
+      "priority": "high",
+      "dependencies": [
+        1
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 3,
+      "title": "Integrate Task Master for AI-Driven Task Breakdown",
+      "description": "Implement the AI-driven task breakdown functionality by integrating Claude Task Master logic into Agent Zero to automatically parse PRDs into structured tasks.",
+      "details": "1. Create a specialized system prompt for task breakdown in `prompts/default/taskmaster.system.md`\n2. Implement a Task Planner module that:\n   - Takes a PRD or high-level spec as input\n   - Uses Claude or other LLM to parse requirements into structured tasks\n   - Outputs tasks in a consistent format (JSON/YAML)\n   - Identifies dependencies between tasks\n   - Estimates complexity and creates subtasks for complex items\n\n3. Integrate with Agent Zero's multi-agent feature:\n   - Configure a subordinate agent with the Task Master prompt\n   - Use `call_subordinate` tool to delegate task breakdown\n   - Parse the subordinate's output into the Task Manager\n\n4. Add functions to handle:\n   - Task sequencing based on dependencies\n   - Complexity analysis\n   - Optional research-backed expansion using Agent Zero's existing web search tools\n\nThe implementation should ensure the agent outputs tasks in a machine-readable format that can be parsed into the Task Manager's data structures.",
+      "testStrategy": "1. Test with sample PRDs of varying complexity\n2. Verify all requirements from the PRD are captured in the generated tasks\n3. Check that dependencies are correctly identified\n4. Validate that complex tasks are broken down into manageable subtasks\n5. Test the integration with Agent Zero's subordinate mechanism\n6. Verify the output format is consistently parseable",
+      "priority": "high",
+      "dependencies": [
+        2
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 4,
+      "title": "Implement Bulk Task Import Feature",
+      "description": "Create functionality to import existing task definitions from various file formats including Markdown, YAML, JSON, and TOML.",
+      "details": "1. Implement an Import Parser component in the backend:\n   - Create parsers for each supported format:\n     - Markdown: Parse lists, checklists, and headings as tasks/subtasks\n     - YAML/JSON: Parse structured data directly into task objects\n     - TOML: Parse configuration-style task definitions\n\n2. Add utility functions to:\n   - Detect file format based on extension or content\n   - Handle folder imports (process all compatible files in a directory)\n   - Resolve conflicts when importing (duplicate IDs, etc.)\n   - Merge imported tasks with existing tasks\n\n3. Implement file validation to ensure imported files match expected schemas\n\n4. Create backend routes for the import functionality:\n   - POST /tasks/import for file uploads\n   - Support for single file or folder upload\n\nPlace this in a module like `python/orchestrator/import_tasks.py` and ensure it integrates with the Task Manager.",
+      "testStrategy": "1. Test importing each supported format with valid files\n2. Verify error handling with malformed files\n3. Test importing a folder with multiple files\n4. Validate conflict resolution when importing tasks with existing IDs\n5. Check that task hierarchies (parent/child relationships) are preserved\n6. Test performance with large imports (100+ tasks)",
+      "priority": "medium",
+      "dependencies": [
+        2
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 5,
+      "title": "Develop Agent Pool for Parallel Task Execution",
+      "description": "Implement an elastic pool of agent instances that can execute tasks in parallel, with pre-warming and dynamic scaling capabilities.",
+      "details": "1. Create an AgentManager class to manage the agent pool:\n   - Initialize with configurable number of pre-warmed agents (default 5)\n   - Implement process-based isolation for each agent\n   - Use multiprocessing to spawn agent processes\n   - Add IPC (inter-process communication) for task assignment and result collection\n\n2. Implement core functions:\n   - start_pool(): Initialize the agent pool\n   - get_idle_agent(): Get an available agent from the pool\n   - assign_task(agent_id, task): Send a task to a specific agent\n   - collect_results(agent_id): Get results from an agent\n   - reset_agent(agent_id): Clear an agent's state for reuse\n   - scale_pool(count): Dynamically adjust pool size\n\n3. Add monitoring capabilities:\n   - Track agent status (idle/busy/error)\n   - Implement timeouts for unresponsive agents\n   - Collect and route agent logs to the main process\n\n4. Integrate with Task Manager:\n   - When a task is started, assign it to an available agent\n   - Update task status based on agent progress\n   - Handle task completion and agent reset\n\nEnsure each agent process has isolated memory and context to prevent leakage between tasks.",
+      "testStrategy": "1. Test pool initialization with different numbers of agents\n2. Verify parallel execution by running multiple tasks simultaneously\n3. Test task isolation by ensuring context from one task doesn't affect another\n4. Validate dynamic scaling by adding/removing agents during execution\n5. Test error handling when an agent crashes or becomes unresponsive\n6. Measure performance impact with various pool sizes",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 6,
+      "title": "Implement Context Management and Optimization",
+      "description": "Create a system for human-in-the-loop context optimization that allows users to review and adjust the context provided to agents before and during task execution.",
+      "details": "1. Develop a Context Manager component:\n   - Create functions to gather relevant context for a task\n   - Implement context categorization (task description, code snippets, documentation, etc.)\n   - Add methods to include/exclude context items\n   - Develop prompt assembly logic that incorporates selected context\n\n2. Implement context suggestion algorithms:\n   - Analyze task description to find relevant files or documentation\n   - Use keyword matching or vector similarity to rank context items\n   - Limit context to fit within model token limits\n\n3. Create a workflow for context review:\n   - Before task execution, prepare a Context Package\n   - Allow user to review and modify context before running\n   - Support mid-execution context adjustments\n\n4. Integrate with Agent Zero's memory system:\n   - Modify how agents access knowledge and memory\n   - Ensure context is properly isolated between agents\n   - Allow for dynamic context updates during execution\n\nPlace this in a module like `python/orchestrator/context_manager.py` and ensure it works with the Agent Pool.",
+      "testStrategy": "1. Test context gathering with various task types\n2. Verify that context suggestions are relevant to the task\n3. Test the inclusion/exclusion of context items\n4. Validate that context changes are reflected in agent prompts\n5. Test mid-execution context adjustments\n6. Verify token counting and context limiting functions",
+      "priority": "medium",
+      "dependencies": [
+        2,
+        5
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 7,
+      "title": "Integrate Context7 for Documentation Retrieval",
+      "description": "Implement integration with Context7 to automatically fetch and incorporate relevant documentation for libraries and frameworks used in the project.",
+      "details": "1. Create a Context7 client module:\n   - Implement API connection to Context7 service\n   - Add functions to query documentation for specific packages/libraries\n   - Handle authentication and rate limiting\n\n2. Implement trigger mechanisms to detect when documentation is needed:\n   - Monitor code execution for package installations\n   - Watch for dependency file changes (requirements.txt, package.json)\n   - Add explicit user triggers to fetch documentation\n\n3. Develop documentation storage and organization:\n   - Save fetched documentation in the knowledge base\n   - Structure documentation by library/framework\n   - Add metadata (version, fetch date, etc.)\n\n4. Integrate with Context Manager:\n   - Make documentation available as context items\n   - Automatically suggest relevant docs for tasks\n\n5. Implement fallback mechanisms if Context7 is unavailable\n\nPlace this in a module like `python/orchestrator/documentation_fetcher.py`.",
+      "testStrategy": "1. Test API connection to Context7\n2. Verify documentation retrieval for common libraries\n3. Test trigger mechanisms with package installations\n4. Validate storage and organization of documentation\n5. Test integration with the Context Manager\n6. Verify fallback mechanisms work when Context7 is unavailable",
+      "priority": "medium",
+      "dependencies": [
+        6
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 8,
+      "title": "Implement Playwright Browser Automation Tool",
+      "description": "Create a browser automation tool using Playwright that allows agents to interact with web pages, fill forms, take screenshots, and extract data.",
+      "details": "1. Create a new tool in the Agent Zero tools directory:\n   - Implement `browser_automation_tool.py` in `python/tools/`\n   - Use Python's Playwright library for browser automation\n   - Design a simple scripting language or command structure for the agent to use\n\n2. Implement core browser actions:\n   - navigate(url): Go to a specific URL\n   - click(selector): Click an element\n   - fill(selector, text): Enter text into a form field\n   - textContent(selector): Extract text from an element\n   - screenshot(filename): Take a screenshot\n   - waitForSelector(selector): Wait for an element to appear\n\n3. Add security measures:\n   - Set timeouts for page loads and actions\n   - Implement sandboxing for browser instances\n   - Add logging of all browser actions for transparency\n\n4. Update the system prompt to document how to use the browser tool\n\n5. Integrate with the Agent Zero tool system:\n   - Register the tool with Agent Zero\n   - Handle tool invocation and result parsing\n\nEnsure the tool can be used by any agent in the pool.",
+      "testStrategy": "1. Test basic browser actions (navigation, clicking, filling forms)\n2. Verify screenshot functionality\n3. Test data extraction from web pages\n4. Validate error handling with invalid selectors or timeouts\n5. Test security measures\n6. Verify integration with the Agent Zero tool system",
+      "priority": "medium",
+      "dependencies": [
+        1
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 9,
+      "title": "Enhance System Prompts for Precision-First Approach",
+      "description": "Update and optimize system prompts throughout the application to implement the precision-first philosophy, ensuring agents produce accurate and relevant outputs.",
+      "details": "1. Review and update the main Agent Zero system prompt:\n   - Modify `prompts/default/agent.system.md` to emphasize precision\n   - Add instructions for agents to ask for clarification when unsure\n   - Include guidance on step-by-step planning\n\n2. Create specialized prompts for different agent roles:\n   - Planner Agent prompt for task breakdown\n   - Executor Agent prompt for coding and implementation\n   - Research Agent prompt for information gathering\n\n3. Implement prompt templates for different task types:\n   - Coding tasks\n   - Research tasks\n   - Testing tasks\n   - Documentation tasks\n\n4. Add structured sections in prompts:\n   - Clear delimiters for context vs. instructions\n   - Explicit guidance on output format\n   - Instructions for handling uncertainty\n\n5. Document the prompt system for developers who want to customize it\n\nEnsure all prompts follow best practices for the target models (Claude, GPT-4, etc.).",
+      "testStrategy": "1. Test prompts with various task types\n2. Verify that agents follow the precision-first approach\n3. Test how agents handle uncertainty or ambiguity\n4. Validate that specialized prompts produce appropriate outputs\n5. Compare results with original Agent Zero prompts to measure improvements",
+      "priority": "medium",
+      "dependencies": [
+        3,
+        6
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 10,
+      "title": "Develop Web UI for Task Management and Orchestration",
+      "description": "Extend Agent Zero's web interface to include comprehensive task management, context editing, and agent monitoring capabilities.",
+      "details": "1. Extend the Agent Zero web UI with new components:\n   - Task Board: List of tasks with status, priority, and controls\n   - Task Detail View: Detailed task information and agent logs\n   - Context Panel: View and edit context for tasks\n   - References/Knowledge Panel: Browse and manage documentation\n   - Agent Pool Monitor: View agent status and resource usage\n\n2. Implement backend routes for the new UI components:\n   - GET/POST /tasks for task management\n   - GET /tasks/:id/logs for task-specific logs\n   - POST /tasks/:id/context for context editing\n   - GET /agents for agent pool status\n\n3. Add real-time updates using websockets:\n   - Stream agent logs to the UI\n   - Update task status in real-time\n   - Show agent activity indicators\n\n4. Implement task controls:\n   - Start/stop/pause task execution\n   - Edit task details\n   - Reorder tasks (drag-and-drop)\n   - Import/export task lists\n\n5. Add settings for orchestrator configuration:\n   - Agent pool size\n   - Default model selection\n   - Context7 API configuration\n\nBuild on Agent Zero's existing UI framework and styling.",
+      "testStrategy": "1. Test all UI components with various screen sizes\n2. Verify real-time updates work correctly\n3. Test task controls (start, stop, edit)\n4. Validate import/export functionality\n5. Test with multiple concurrent tasks\n6. Verify settings changes are applied correctly\n7. Test cross-browser compatibility",
+      "priority": "high",
+      "dependencies": [
+        2,
+        5,
+        6
+      ],
+      "status": "pending",
+      "subtasks": []
+    }
+  ]
+}

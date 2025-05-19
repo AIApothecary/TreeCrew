@@ -23,7 +23,8 @@ from python.helpers.defer import DeferredTask
 # Set the new timezone to 'UTC'
 os.environ["TZ"] = "UTC"
 # Apply the timezone change
-time.tzset()
+if sys.platform != "win32":
+    time.tzset()
 
 # initialize the internal Flask server
 app = Flask("app", static_folder=get_abs_path("./webui"), static_url_path="/")
@@ -230,22 +231,12 @@ def run():
         register_api_handler(app, handler)
 
     try:
-        server = make_server(
-            host=host,
-            port=port,
-            app=app,
-            request_handler=NoRequestLoggingWSGIRequestHandler,
-            threaded=True,
-        )
-
         printer = PrintStyle()
 
         def signal_handler(sig=None, frame=None):
-            nonlocal tunnel, server, printer
+            nonlocal tunnel, printer
             with lock:
                 printer.print("Caught signal, stopping server...")
-                if server:
-                    server.shutdown()
                 process.stop_server()
                 if tunnel:
                     tunnel.stop()
@@ -256,13 +247,13 @@ def run():
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
 
-        process.set_server(server)
-        server.log_startup()
-        server.serve_forever()
-        # Run Flask app
-        # app.run(
-        #     request_handler=NoRequestLoggingWSGIRequestHandler, port=port, host=host
-        # )
+        # Use Flask's app.run() method which supports async views
+        app.run(
+            request_handler=NoRequestLoggingWSGIRequestHandler,
+            port=port,
+            host=host,
+            threaded=True
+        )
     finally:
         # Clean up tunnel if it was started
         if tunnel:

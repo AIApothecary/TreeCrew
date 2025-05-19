@@ -1,0 +1,37 @@
+# Task ID: 6
+# Title: Implement Context Management and Optimization
+# Status: pending
+# Dependencies: 2, 5
+# Priority: medium
+# Description: Create a system for human-in-the-loop context optimization that allows users to review and adjust the context provided to agents before and during task execution.
+# Details:
+1. Develop a Context Manager component:
+   - Create functions to gather relevant context for a task
+   - Implement context categorization (task description, code snippets, documentation, etc.)
+   - Add methods to include/exclude context items
+   - Develop prompt assembly logic that incorporates selected context
+
+2. Implement context suggestion algorithms:
+   - Analyze task description to find relevant files or documentation
+   - Use keyword matching or vector similarity to rank context items
+   - Limit context to fit within model token limits
+
+3. Create a workflow for context review:
+   - Before task execution, prepare a Context Package
+   - Allow user to review and modify context before running
+   - Support mid-execution context adjustments
+
+4. Integrate with Agent Zero's memory system:
+   - Modify how agents access knowledge and memory
+   - Ensure context is properly isolated between agents
+   - Allow for dynamic context updates during execution
+
+Place this in a module like `python/orchestrator/context_manager.py` and ensure it works with the Agent Pool.
+
+# Test Strategy:
+1. Test context gathering with various task types
+2. Verify that context suggestions are relevant to the task
+3. Test the inclusion/exclusion of context items
+4. Validate that context changes are reflected in agent prompts
+5. Test mid-execution context adjustments
+6. Verify token counting and context limiting functions

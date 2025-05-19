@@ -1,0 +1,34 @@
+# Task ID: 4
+# Title: Implement Bulk Task Import Feature
+# Status: pending
+# Dependencies: 2
+# Priority: medium
+# Description: Create functionality to import existing task definitions from various file formats including Markdown, YAML, JSON, and TOML.
+# Details:
+1. Implement an Import Parser component in the backend:
+   - Create parsers for each supported format:
+     - Markdown: Parse lists, checklists, and headings as tasks/subtasks
+     - YAML/JSON: Parse structured data directly into task objects
+     - TOML: Parse configuration-style task definitions
+
+2. Add utility functions to:
+   - Detect file format based on extension or content
+   - Handle folder imports (process all compatible files in a directory)
+   - Resolve conflicts when importing (duplicate IDs, etc.)
+   - Merge imported tasks with existing tasks
+
+3. Implement file validation to ensure imported files match expected schemas
+
+4. Create backend routes for the import functionality:
+   - POST /tasks/import for file uploads
+   - Support for single file or folder upload
+
+Place this in a module like `python/orchestrator/import_tasks.py` and ensure it integrates with the Task Manager.
+
+# Test Strategy:
+1. Test importing each supported format with valid files
+2. Verify error handling with malformed files
+3. Test importing a folder with multiple files
+4. Validate conflict resolution when importing tasks with existing IDs
+5. Check that task hierarchies (parent/child relationships) are preserved
+6. Test performance with large imports (100+ tasks)

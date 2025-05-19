@@ -1,0 +1,34 @@
+# Task ID: 3
+# Title: Integrate Task Master for AI-Driven Task Breakdown
+# Status: pending
+# Dependencies: 2
+# Priority: high
+# Description: Implement the AI-driven task breakdown functionality by integrating Claude Task Master logic into Agent Zero to automatically parse PRDs into structured tasks.
+# Details:
+1. Create a specialized system prompt for task breakdown in `prompts/default/taskmaster.system.md`
+2. Implement a Task Planner module that:
+   - Takes a PRD or high-level spec as input
+   - Uses Claude or other LLM to parse requirements into structured tasks
+   - Outputs tasks in a consistent format (JSON/YAML)
+   - Identifies dependencies between tasks
+   - Estimates complexity and creates subtasks for complex items
+
+3. Integrate with Agent Zero's multi-agent feature:
+   - Configure a subordinate agent with the Task Master prompt
+   - Use `call_subordinate` tool to delegate task breakdown
+   - Parse the subordinate's output into the Task Manager
+
+4. Add functions to handle:
+   - Task sequencing based on dependencies
+   - Complexity analysis
+   - Optional research-backed expansion using Agent Zero's existing web search tools
+
+The implementation should ensure the agent outputs tasks in a machine-readable format that can be parsed into the Task Manager's data structures.
+
+# Test Strategy:
+1. Test with sample PRDs of varying complexity
+2. Verify all requirements from the PRD are captured in the generated tasks
+3. Check that dependencies are correctly identified
+4. Validate that complex tasks are broken down into manageable subtasks
+5. Test the integration with Agent Zero's subordinate mechanism
+6. Verify the output format is consistently parseable

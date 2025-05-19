@@ -1,0 +1,40 @@
+# Task ID: 2
+# Title: Implement Task Manager Core Module
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Create the core Task Manager module that will store, track, and manage tasks and their states throughout the application.
+# Details:
+Develop a Task Manager module that will be the central component for task management:
+
+1. Define a standardized task schema with fields:
+   - id: unique identifier
+   - title: short descriptive name
+   - description: detailed explanation
+   - status: pending/in-progress/completed/error
+   - dependencies: list of task IDs this task depends on
+   - priority: high/medium/low
+   - details: implementation details
+   - testStrategy: validation approach
+   - assignee: agent ID or user
+
+2. Implement core functions:
+   - create_task(): Create a new task
+   - update_task(): Update task properties
+   - get_task(): Retrieve a task by ID
+   - list_tasks(): Get all tasks with optional filtering
+   - delete_task(): Remove a task
+   - change_status(): Update task status
+
+3. Add persistence layer to save tasks to disk (YAML/JSON)
+
+4. Implement dependency tracking to ensure tasks are executed in the correct order
+
+Place this module in a new directory structure, such as `python/orchestrator/task_manager.py`
+
+# Test Strategy:
+1. Unit tests for all core functions
+2. Test task creation, retrieval, updating, and deletion
+3. Verify persistence by saving tasks, restarting the application, and confirming tasks are loaded correctly
+4. Test dependency tracking by creating tasks with dependencies and verifying they're respected
+5. Validate the task schema with various inputs including edge cases
