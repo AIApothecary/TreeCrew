@@ -6,3 +6,5 @@ services:
       - .:/a0
     ports:
       - "50080:80"
+    env_file:
+      - ../.env
