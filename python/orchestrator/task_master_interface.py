@@ -11,12 +11,12 @@ import logging
 import asyncio
 import json
 from typing import Dict, List, Any, Optional, Tuple, Union
-import sys
-import os
+# import sys # No longer needed for sys.path manipulation
+# import os # No longer needed for sys.path manipulation
 
 # Add the parent directory to the path to import the Task Master CLI tool
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from tools.task_master_cli_tool import TaskMasterCliTool
+# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # Removed sys.path modification
+from .tools.task_master_cli_tool import TaskMasterCliTool # Changed to relative import
 from .engine import TaskPackage, ResultPackage
 
 # Configure logging
@@ -61,7 +61,14 @@ class TaskMasterInterface:
             
         # Parse the result
         try:
-            task_data = json.loads(result["result"].split("Result:\n", 1)[1])
+            # Ensure result["result"] is a string before splitting
+            result_str = result.get("result")
+            if not isinstance(result_str, str):
+                logger.error(f"Unexpected result format from get_next_task: {result_str}")
+                return None
+
+            task_data_str = result_str.split("Result:\n", 1)[1] if "Result:\n" in result_str else result_str
+            task_data = json.loads(task_data_str)
             
             # Check if a task was found
             if not task_data or "id" not in task_data:
@@ -72,8 +79,11 @@ class TaskMasterInterface:
             task_package = self._convert_to_task_package(task_data)
             return task_package
             
-        except Exception as e:
-            logger.error(f"Error parsing next task result: {e}")
+        except (json.JSONDecodeError, IndexError, KeyError) as e:
+            logger.error(f"Error parsing next task result: {e}. Raw result: {result.get('result')}")
+            return None
+        except Exception as e: # Catch any other unexpected errors
+            logger.error(f"Unexpected error parsing next task result: {e}. Raw result: {result.get('result')}")
             return None
     
     async def get_task(self, task_id: str) -> Optional[TaskPackage]:
@@ -94,7 +104,13 @@ class TaskMasterInterface:
             
         # Parse the result
         try:
-            task_data = json.loads(result["result"].split("Result:\n", 1)[1])
+            result_str = result.get("result")
+            if not isinstance(result_str, str):
+                logger.error(f"Unexpected result format from get_task: {result_str}")
+                return None
+
+            task_data_str = result_str.split("Result:\n", 1)[1] if "Result:\n" in result_str else result_str
+            task_data = json.loads(task_data_str)
             
             # Check if a task was found
             if not task_data or "id" not in task_data:
@@ -105,8 +121,11 @@ class TaskMasterInterface:
             task_package = self._convert_to_task_package(task_data)
             return task_package
             
-        except Exception as e:
-            logger.error(f"Error parsing task {task_id} result: {e}")
+        except (json.JSONDecodeError, IndexError, KeyError) as e:
+            logger.error(f"Error parsing task {task_id} result: {e}. Raw result: {result.get('result')}")
+            return None
+        except Exception as e: # Catch any other unexpected errors
+            logger.error(f"Unexpected error parsing task {task_id} result: {e}. Raw result: {result.get('result')}")
             return None
     
     async def get_tasks(self, status: Optional[str] = None) -> List[TaskPackage]:
@@ -127,21 +146,35 @@ class TaskMasterInterface:
             
         # Parse the result
         try:
-            result_text = result["result"].split("Result:\n", 1)[1]
+            result_str = result.get("result")
+            if not isinstance(result_str, str):
+                logger.error(f"Unexpected result format from get_tasks: {result_str}")
+                return []
+
+            result_text = result_str.split("Result:\n", 1)[1] if "Result:\n" in result_str else result_str
             tasks_data = json.loads(result_text)
             
+            if not isinstance(tasks_data, list):
+                logger.error(f"Expected a list of tasks, got {type(tasks_data)}. Raw: {result_text}")
+                return []
+
             # Convert to TaskPackage objects
             task_packages = []
             for task_data in tasks_data:
-                task_package = self._convert_to_task_package(task_data)
-                task_packages.append(task_package)
-                
+                if isinstance(task_data, dict):
+                    task_package = self._convert_to_task_package(task_data)
+                    task_packages.append(task_package)
+                else:
+                    logger.warning(f"Skipping non-dict item in tasks list: {task_data}")
             return task_packages
             
-        except Exception as e:
-            logger.error(f"Error parsing tasks result: {e}")
+        except (json.JSONDecodeError, IndexError, KeyError) as e:
+            logger.error(f"Error parsing tasks result: {e}. Raw result: {result.get('result')}")
             return []
-    
+        except Exception as e: # Catch any other unexpected errors
+            logger.error(f"Unexpected error parsing tasks result: {e}. Raw result: {result.get('result')}")
+            return []
+
     async def set_task_status(self, task_id: str, status: str) -> bool:
         """
         Set the status of a task in Task Master.
@@ -245,19 +278,20 @@ class TaskMasterInterface:
         details = task_data.get("details", "")
         
         # Combine title, description, and details into the prompt
-        prompt = f"{title}\n\n{description}\n\n{details}"
+        prompt_parts = [str(p) for p in [title, description, details] if p is not None]
+        prompt = "\n\n".join(filter(None, prompt_parts))
         
         # Extract dependencies
         dependencies = []
         for dep in task_data.get("dependencies", []):
-            if isinstance(dep, str):
-                dependencies.append(dep)
+            if isinstance(dep, (str, int, float)): # Allow numeric IDs as well
+                dependencies.append(str(dep))
             elif isinstance(dep, dict) and "id" in dep:
                 dependencies.append(str(dep["id"]))
         
         # Extract priority
         priority_map = {"high": 3, "medium": 2, "low": 1}
-        priority_str = task_data.get("priority", "medium").lower()
+        priority_str = str(task_data.get("priority", "medium")).lower()
         priority = priority_map.get(priority_str, 2)
         
         # Create context
@@ -267,13 +301,13 @@ class TaskMasterInterface:
             "details": details,
             "test_strategy": task_data.get("testStrategy", ""),
             "subtasks": task_data.get("subtasks", []),
-            "original_task_data": task_data
+            "original_task_data": task_data # Keep original for reference
         }
         
         # Create TaskPackage
         task_package = TaskPackage(
             task_id=task_id,
-            task_type="code",  # Default to code task type
+            task_type="code",  # Default to code task type, can be overridden
             prompt=prompt,
             context=context,
             dependencies=dependencies,

@@ -7,17 +7,19 @@ the pool of AI agent workers and their assignment to tasks.
 
 import logging
 import asyncio
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Dict, List, Any, Optional, Tuple, Union 
 import uuid
 import time
 import os
+
+from pydantic import SecretStr 
 
 from .engine import TaskPackage, ResultPackage
 
 # Langchain imports for AI model interaction
 from langchain_anthropic import ChatAnthropic
-from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_core.exceptions import OutputParserException # For potential parsing errors
+from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage 
+from langchain_core.exceptions import OutputParserException
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -31,65 +33,68 @@ class AgentWorker:
     """
     
     def __init__(self, worker_id: str, worker_type: str, capabilities: List[str], agent_profile: Dict[str, Any]):
-        """
-        Initialize an agent worker.
-        
-        Args:
-            worker_id: Unique identifier for the worker
-            worker_type: Type of worker (e.g., 'code', 'architect', 'debug')
-            capabilities: List of task types this worker can handle
-            agent_profile: Configuration profile for this agent (model, params, etc.)
-        """
         self.worker_id = worker_id
         self.worker_type = worker_type
         self.capabilities = capabilities
-        self.agent_profile = agent_profile # Store the agent profile
+        self.agent_profile = agent_profile
         self.busy = False
         self.current_task: Optional[str] = None
         self.last_active = time.time()
         self.results: Dict[str, ResultPackage] = {}
         
-        self.ai_client: Any = None # AI client will be initialized on first use
-        self.api_key_env_var: Optional[str] = self.agent_profile.get("api_key_env") # e.g., "ANTHROPIC_API_KEY"
+        self.ai_client: Any = None
+        self.api_key_env_var: Optional[str] = self.agent_profile.get("api_key_env")
         
         logger.debug(f"Worker {self.worker_id} initialized with profile: {self.agent_profile.get('model_name', 'N/A')}")
 
     def _initialize_ai_client(self) -> bool:
-        """Initializes the AI client based on the agent profile."""
         if self.ai_client:
             return True
 
         provider = self.agent_profile.get("model_provider")
-        model_name = self.agent_profile.get("model_name")
-        api_key = None
-
-        if self.api_key_env_var:
-            api_key = os.environ.get(self.api_key_env_var)
-        elif provider == "anthropic": # Default if not specified in profile
-             api_key = os.environ.get("ANTHROPIC_API_KEY")
-        # Add elif for other providers like openai, google etc.
-        # elif provider == "openai":
-        #     api_key = os.environ.get("OPENAI_API_KEY")
-
-
-        if not api_key:
-            logger.error(f"API key not found for provider {provider} (env var: {self.api_key_env_var or 'default provider key'}). Worker {self.worker_id} cannot make API calls.")
+        model_name_any = self.agent_profile.get("model_name")
+        
+        if not isinstance(model_name_any, str):
+            logger.error(f"Model name is not a string or is missing in agent profile for worker {self.worker_id}. Profile value: {model_name_any}")
             return False
+        model_name: str = model_name_any 
 
+        api_key_str: Optional[str] = None
+        effective_api_key_env_var = self.api_key_env_var
+        
+        if provider == "anthropic":
+            if not effective_api_key_env_var: 
+                effective_api_key_env_var = "ANTHROPIC_API_KEY" 
+            api_key_str = os.environ.get(effective_api_key_env_var)
+            # Warning if not found, but proceed as ChatAnthropic might find it itself
+            if not api_key_str:
+                 logger.warning(
+                    f"Anthropic API key string not found using env var '{effective_api_key_env_var}'. "
+                    f"ChatAnthropic will attempt to find it via its default mechanisms."
+                )
+        # elif provider == "openai":
+        #     # Similar logic for OpenAI
+        #     pass
+        
         try:
             if provider == "anthropic":
-                self.ai_client = ChatAnthropic(
-                    model_name=model_name, # Corrected: Changed 'model' to 'model_name'
-                    api_key=api_key,
-                    max_tokens_to_sample=self.agent_profile.get('max_tokens', 4096), # Corrected: Changed 'max_tokens' to 'max_tokens_to_sample'
-                    temperature=self.agent_profile.get('temperature', 0.7)
-                    # stream=self.agent_profile.get('stream', False) # ainvoke doesn't stream like this
-                )
+                client_args = {
+                    "model_name": model_name,
+                    "max_tokens_to_sample": self.agent_profile.get('max_tokens_to_sample', self.agent_profile.get('max_tokens', 4096)),
+                    "temperature": self.agent_profile.get('temperature', 0.7),
+                    "timeout": None,
+                    "stop": None
+                }
+                if api_key_str: # Only pass api_key if we explicitly found one
+                    client_args["api_key"] = SecretStr(api_key_str)
+                
+                self.ai_client = ChatAnthropic(**client_args)
                 logger.info(f"Anthropic client initialized for worker {self.worker_id} with model {model_name}")
-            # Add elif for other providers
+
             # elif provider == "openai":
             #     from langchain_openai import ChatOpenAI
-            #     self.ai_client = ChatOpenAI(model_name=model_name, api_key=api_key, ...) # Use model_name for consistency
+            #     # Similar conditional logic for api_key for OpenAI
+            #     self.ai_client = ChatOpenAI(model_name=model_name, ...)
             else:
                 logger.error(f"Unsupported model provider: {provider} for worker {self.worker_id}")
                 return False
@@ -97,7 +102,6 @@ class AgentWorker:
         except Exception as e:
             logger.error(f"Failed to initialize AI client for worker {self.worker_id}, provider {provider}: {e}")
             return False
-
 
     def can_handle(self, task_type: str) -> bool:
         return task_type in self.capabilities
@@ -129,10 +133,10 @@ class AgentWorker:
         if not self.ai_client:
             if not self._initialize_ai_client():
                 error_msg = f"AI Client for worker {self.worker_id} could not be initialized."
-                result_pkg = ResultPackage( # Renamed variable to avoid conflict
+                result_pkg = ResultPackage(
                     task_id=task.task_id,
                     status="failure",
-                    result=None, # Corrected: Added result=None for failure case
+                    result=None, 
                     error=error_msg,
                     execution_time=time.time() - start_time,
                     metadata={"worker_id": self.worker_id, "agent_profile_name": self.agent_profile.get('model_name', 'N/A')}
@@ -141,18 +145,19 @@ class AgentWorker:
                 logger.error(f"Worker {self.worker_id} failed task {task.task_id}: {error_msg}")
                 return
 
-        messages = []
-        # Simple context handling: if context has a 'system_prompt', use it.
+        messages: List[Union[SystemMessage, HumanMessage]] = [] 
+        
         if task.context and isinstance(task.context, dict) and "system_prompt" in task.context:
-            messages.append(SystemMessage(content=task.context["system_prompt"]))
+            system_prompt_content = task.context.get("system_prompt") 
+            if isinstance(system_prompt_content, str): 
+                messages.append(SystemMessage(content=system_prompt_content))
         messages.append(HumanMessage(content=task.prompt))
 
         try:
-            # Make the API call
             response = await self.ai_client.ainvoke(messages)
             response_content = response.content if hasattr(response, 'content') else str(response)
             
-            result_pkg = ResultPackage( # Renamed variable
+            result_pkg = ResultPackage(
                 task_id=task.task_id,
                 status="success",
                 result=response_content,
@@ -168,7 +173,7 @@ class AgentWorker:
             
         except Exception as e:
             logger.error(f"Worker {self.worker_id} (profile: {self.agent_profile.get('model_name')}) API call failed for task {task.task_id}: {e}")
-            result_pkg = ResultPackage( # Renamed variable
+            result_pkg = ResultPackage(
                 task_id=task.task_id,
                 status="failure",
                 result=None,
@@ -185,10 +190,6 @@ class AgentWorker:
 
 
 class PoolManager:
-    """
-    Manages a pool of AI agent workers.
-    """
-    
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config: Dict[str, Any] = config if config is not None else {}
         self.workers: Dict[str, AgentWorker] = {}
@@ -222,7 +223,6 @@ class PoolManager:
         for worker_type, capabilities in self.defined_worker_types.items():
             count = self.worker_counts.get(worker_type, 0)
             if count == 0:
-                # logger.info(f"No workers configured for type '{worker_type}'. Skipping.") # Too verbose
                 continue
 
             profile_name = self.worker_type_to_profile_mapping.get(worker_type)
