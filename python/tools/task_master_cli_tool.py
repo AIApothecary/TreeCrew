@@ -48,33 +48,7 @@ class TaskMasterCliTool(Tool):
             }
         }
         
-        # Check if task-master is installed
-        self._check_task_master_installed()
-        
-        logger.info("Task Master CLI tool initialized")
-    
-    def _check_task_master_installed(self) -> None:
-        """
-        Check if the task-master CLI is installed.
-        
-        Raises:
-            RuntimeError: If task-master is not installed
-        """
-        try:
-            result = subprocess.run(
-                ["task-master", "--version"],
-                capture_output=True,
-                text=True,
-                check=False
-            )
-            
-            if result.returncode != 0:
-                raise RuntimeError("task-master CLI is not installed or not working properly")
-                
-            logger.info(f"task-master CLI version: {result.stdout.strip()}")
-            
-        except FileNotFoundError:
-            logger.warning("task-master CLI not found, will attempt to use npx")
+        logger.info("Task Master CLI tool initialized. Expecting 'task-master' to be globally available.")
     
     def _build_command(self, command: str, args: Dict[str, Any]) -> List[str]:
         """
@@ -127,31 +101,21 @@ class TaskMasterCliTool(Tool):
             dict: The result of the command execution
         """
         try:
-            # Try to execute the command directly
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                check=False
+                check=False  # We will check returncode manually
             )
-            
-            if result.returncode != 0 and "task-master" in cmd[0]:
-                # If the direct command failed, try using npx
-                logger.warning("Direct command failed, trying with npx")
-                npx_cmd = ["npx", "task-master-ai"] + cmd[1:]
-                result = subprocess.run(
-                    npx_cmd,
-                    capture_output=True,
-                    text=True,
-                    check=False
-                )
         except Exception as e:
+            logger.error(f"Exception during command execution: {' '.join(cmd)}. Error: {e}")
             return {
                 "success": False,
                 "error": str(e),
                 "stdout": "",
                 "stderr": "",
-                "command": " ".join(cmd)
+                "command": " ".join(cmd),
+                "returncode": -1 # Indicate an exception occurred
             }
         
         # Process the result
@@ -217,9 +181,9 @@ class TaskMasterCliTool(Tool):
         
         # Convert Response to Dict for helper methods
         return {
-            "success": True,
+            "success": True, # This indicates the wrapper itself succeeded, not necessarily the command
             "command": options.get("command", ""),
-            "result": result.message
+            "result": result.message # The message from Response contains formatted command output or error
         }
     
     async def execute(self, **kwargs) -> Response:
@@ -246,10 +210,18 @@ class TaskMasterCliTool(Tool):
         cmd = self._build_command(command, args)
         
         # Execute the command
+        logger.info(f"Executing Task Master command: {' '.join(cmd)}")
         execution_result = self._execute_command(cmd)
         
         if not execution_result["success"]:
-            error_message = f"Command execution failed: {execution_result['stderr'] or 'Unknown error'}\nCommand: {execution_result['command']}"
+            error_message = (
+                f"Task Master command execution failed.\n"
+                f"Command: {execution_result['command']}\n"
+                f"Return Code: {execution_result['returncode']}\n"
+                f"Stderr: {execution_result['stderr'].strip() or 'N/A'}\n"
+                f"Stdout: {execution_result['stdout'].strip() or 'N/A'}"
+            )
+            logger.error(error_message)
             return Response(
                 message=error_message,
                 break_loop=False
@@ -260,8 +232,11 @@ class TaskMasterCliTool(Tool):
         
         # Format the response
         result_message = f"Command executed successfully: {execution_result['command']}\n\n"
-        result_message += f"Result:\n{json.dumps(parsed_output, indent=2)}"
-        
+        try:
+            result_message += f"Result:\n{json.dumps(parsed_output, indent=2)}"
+        except TypeError: # Handle cases where parsed_output might not be JSON serializable (e.g. already a string)
+            result_message += f"Result:\n{parsed_output}"
+
         return Response(
             message=result_message,
             break_loop=False
@@ -282,7 +257,7 @@ class TaskMasterCliTool(Tool):
         if status:
             args["status"] = status
         if with_subtasks:
-            args["with-subtasks"] = "true"
+            args["with-subtasks"] = "true" # Task Master CLI expects string "true"
         
         return await self._execute_wrapper({
             "command": "list",
@@ -354,7 +329,7 @@ class TaskMasterCliTool(Tool):
         }
         
         if research:
-            args["research"] = "true"
+            args["research"] = "true" # Task Master CLI expects string "true"
         
         return await self._execute_wrapper({
             "command": "update-task",
@@ -379,7 +354,7 @@ class TaskMasterCliTool(Tool):
         }
         
         if research:
-            args["research"] = "true"
+            args["research"] = "true" # Task Master CLI expects string "true"
         
         return await self._execute_wrapper({
             "command": "update-subtask",
@@ -411,7 +386,7 @@ class TaskMasterCliTool(Tool):
             args["priority"] = priority
         
         if research:
-            args["research"] = "true"
+            args["research"] = "true" # Task Master CLI expects string "true"
         
         return await self._execute_wrapper({
             "command": "add-task",
@@ -440,10 +415,10 @@ class TaskMasterCliTool(Tool):
             args["num"] = str(num)
         
         if research:
-            args["research"] = "true"
+            args["research"] = "true" # Task Master CLI expects string "true"
         
         if force:
-            args["force"] = "true"
+            args["force"] = "true" # Task Master CLI expects string "true"
         
         return await self._execute_wrapper({
             "command": "expand",

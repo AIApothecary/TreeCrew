@@ -7,7 +7,7 @@ and providing feedback to the orchestration engine.
 """
 
 import logging
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Dict, List, Any, Optional, Tuple, Union, cast
 import json
 import os
 import time
@@ -42,6 +42,10 @@ class ResultsProcessor:
         self.storage_dir = self.config.get("storage_dir", "results_storage")
         os.makedirs(self.storage_dir, exist_ok=True)
         
+        # Task Master interface will be injected by the main module
+        from .task_master_interface import TaskMasterInterface
+        self.task_master_interface: Optional[TaskMasterInterface] = None
+        
         logger.info("Results Processor initialized")
     
     async def process_result(self, task_id: str, result: ResultPackage) -> Dict[str, Any]:
@@ -49,7 +53,7 @@ class ResultsProcessor:
         Process the result of a completed task.
         
         This method analyzes the result, stores it, and provides feedback
-        to the orchestration engine.
+        to the orchestration engine. It also updates the task status in Task Master.
         
         Args:
             task_id: The ID of the completed task
@@ -74,6 +78,16 @@ class ResultsProcessor:
         
         # Generate feedback
         feedback = self._generate_feedback(task_id, result, analysis)
+        
+        # Update task status in Task Master
+        if self.task_master_interface is not None:
+            try:
+                # Use typing.cast to explicitly tell the type checker that the variable is not None
+                from .task_master_interface import TaskMasterInterface
+                task_master = cast(TaskMasterInterface, self.task_master_interface)
+                await task_master.process_task_result(task_id, result)
+            except Exception as e:
+                logger.error(f"Failed to update task status in Task Master: {e}")
         
         logger.info(f"Processed result for task {task_id}")
         return feedback

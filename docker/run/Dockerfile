@@ -7,7 +7,7 @@ RUN if [ -z "$BRANCH" ]; then echo "ERROR: BRANCH is not set!" >&2; exit 1; fi
 ENV BRANCH=$BRANCH
 
 # Set locale to en_US.UTF-8 and timezone to UTC
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y locales tzdata
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y locales tzdata nodejs npm
 RUN sed -i -e 's/# \(en_US\.UTF-8 .*\)/\1/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
@@ -20,7 +20,7 @@ ENV LC_ALL=en_US.UTF-8
 ENV TZ=UTC
 
 # Copy contents of the project to /a0
-COPY ./fs/ /
+COPY docker/run/fs/ /
 
 # pre installation steps
 RUN bash /ins/pre_install.sh $BRANCH
@@ -35,6 +35,12 @@ RUN bash /ins/install_additional.sh $BRANCH
 ARG CACHE_DATE=none
 RUN echo "cache buster $CACHE_DATE" && bash /ins/install_A02.sh $BRANCH
 
+# Install types-PyYAML for type checking
+# Install task-master-ai CLI globally
+RUN npm install -g task-master-ai --force
+
+RUN pip install --break-system-packages types-PyYAML==6.0.12.20250516
+
 # post installation steps
 RUN bash /ins/post_install.sh $BRANCH
 
@@ -45,5 +51,5 @@ RUN chmod +x /exe/initialize.sh /exe/run_A0.sh /exe/run_searxng.sh /exe/run_tunn
 
 # Set working directory to project root so .env is found
 WORKDIR /a0
-# initialize runtime and switch to supervisord
+# initialize runtime and switch to supervisor
 CMD ["/exe/initialize.sh", "$BRANCH"]

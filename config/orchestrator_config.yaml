@@ -23,16 +23,46 @@ worker_pool:
   idle_timeout: 60
   # Worker initialization timeout in seconds
   init_timeout: 30
-  # Worker configuration
-  worker_config:
-    # Default model for workers
-    default_model: "claude-3-opus-20240229"
-    # Maximum tokens for worker responses
-    max_tokens: 4096
-    # Temperature for worker responses
-    temperature: 0.7
-    # Whether to stream responses
-    stream: false
+  
+  # Agent profiles define configurations for different AI models/providers
+  agent_profiles:
+    claude_opus_general: # Default profile, based on previous worker_config
+      model_provider: "anthropic" # e.g., anthropic, openai, google, ollama
+      model_name: "claude-3-opus-20240229"
+      # API_KEY should be set as an environment variable (e.g., ANTHROPIC_API_KEY)
+      # The specific env var name can be standardized or made configurable per profile if needed.
+      max_tokens: 4096
+      temperature: 0.7
+      stream: false
+    # Example for a future coder-specific Claude model (Sonnet)
+    # claude_sonnet_coder:
+    #   model_provider: "anthropic"
+    #   model_name: "claude-3-sonnet-20240229"
+    #   max_tokens: 4000
+    #   temperature: 0.5
+    # Example for a future OpenAI/Codex model
+    # openai_davinci_coder:
+    #   model_provider: "openai"
+    #   model_name: "text-davinci-003" # Or newer equivalent
+    #   max_tokens: 2048
+    #   temperature: 0.3
+
+  # Maps PoolManager's hardcoded worker types to agent profiles
+  # This allows tasks requesting a 'code' worker to use a specific AI profile.
+  worker_type_to_profile_mapping:
+    code: "claude_opus_general"      # For now, all use the default Claude Opus
+    architect: "claude_opus_general"
+    debug: "claude_opus_general"
+    general: "claude_opus_general"
+
+  # Configuration for the number of workers of each type (as currently used by PoolManager)
+  # These counts will determine how many workers of each type are pre-initialized.
+  # Each will use the profile defined in worker_type_to_profile_mapping.
+  worker_counts:
+    code: 2
+    architect: 1
+    debug: 1
+    general: 1
 
 # Context Manager configuration
 context_manager:
@@ -76,8 +106,8 @@ task_master_cli:
   executable_path: "task-master"
   # Default task file path
   default_task_file: "./tasks/tasks.json"
-  # Enable npx fallback
-  enable_npx_fallback: true
+  # Enable npx fallback (Note: We've moved to global install in Docker, so this might be less relevant)
+  enable_npx_fallback: false # Changed to false as task-master is globally installed
   # NPX package name
   npx_package_name: "task-master-ai"
   # Command timeout in seconds

@@ -1,7 +1,33 @@
 services:
   agent-zero:
     container_name: agent-zero
-    image: utpharmer/treecrew:latest
+    # image: utpharmer/treecrew:latest # Commented out to enable local build
+    build:
+      context: ../..  # Assuming this docker-compose.yml is in docker/run, context is project root
+      dockerfile: docker/run/Dockerfile # Path to the Dockerfile from the context
+      args:
+        BRANCH: ${BRANCH:-main} # Pass BRANCH build argument, defaults to main if not set
     volumes:
-      - .:/a0
+      - ../..:/a0 # Mount project root to /a0 in the container
+      - /c/apps/treecrew/working_dir:/working_dir
+      - /c/apps/docker_dock:/agentic_coders
+      - /c/apps/apothecaryai:/apothecaryai
+      - /c/apps/goodlier:/goodlier
+      
     ports:
+      - "50080:80"
+    environment:
+      - AGENTIC_CODERS_PATH=/a0/Agentic_Coders
+      - AGENTIC_CODERS_CONFIG_PATH=/a0/config/orchestrator_config.yaml
+      - AGENTIC_CODERS_TASKS_PATH=/a0/tasks/tasks.json
+      - AGENTIC_CODERS_CONTEXT_PATH=/a0/data/orchestrator/context
+      - AGENTIC_CODERS_RESULTS_PATH=/a0/data/orchestrator/results
+      - AGENTIC_CODERS_LOGS_PATH=/a0/logs/orchestrator_logs.log
+      - AGENTIC_CODERS_MAX_TOKENS=4096
+      - AGENTIC_CODERS_TEMPERATURE=0.7
+      - AGENTIC_CODERS_STREAM=false
+      - AGENTIC_CODERS_INIT_TIMEOUT=30
+      - AGENTIC_CODERS_STORAGE_TYPE=file
+      - AGENTIC_CODERS_STORAGE_PATH=/a0/data/orchestrator/context
+      - AGENTIC_CODERS_MAX_CONTEXT_SIZE=1000000
+      - AGENTIC_CODERS_RETENTION_PERIOD=7

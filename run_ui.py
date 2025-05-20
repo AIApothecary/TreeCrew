@@ -7,8 +7,10 @@ import asyncio
 from functools import wraps
 import threading
 import signal
+import logging # Added
+import yaml # Added
 from flask import Flask, request, Response
-from flask_basicauth import BasicAuth
+from flask_basicauth import BasicAuth # type: ignore
 from python.helpers import errors, files, git
 from python.helpers.files import get_abs_path
 from python.helpers import persist_chat, runtime, dotenv, process
@@ -19,6 +21,13 @@ from python.helpers.job_loop import run_loop
 from python.helpers.print_style import PrintStyle
 from python.helpers.task_scheduler import TaskScheduler
 from python.helpers.defer import DeferredTask
+
+# Orchestrator imports
+from python.orchestrator.engine import OrchestrationEngine
+from python.orchestrator.pool_manager import PoolManager
+from python.orchestrator.context_manager import ContextManager
+from python.orchestrator.results_processor import ResultsProcessor
+from python.orchestrator.task_master_interface import TaskMasterInterface
 
 # Set the new timezone to 'UTC'
 os.environ["TZ"] = "UTC"
@@ -187,6 +196,60 @@ def run():
 
     except Exception as e:
         PrintStyle().error(errors.format_error(e))
+
+    # Load Orchestrator Configuration
+    try:
+        logger = logging.getLogger(__name__) # Ensure logger is available
+        PrintStyle().print("Loading Orchestrator configuration...")
+        config_path = get_abs_path("config/orchestrator_config.yaml")
+        orchestrator_config = {}
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                orchestrator_config = yaml.safe_load(f)
+            PrintStyle().print(f"Loaded orchestrator configuration from {config_path}")
+        else:
+            logger.warning(f"Orchestrator config file not found at {config_path}. Using empty config.")
+
+        PrintStyle().print("Initializing Orchestration Engine components...")
+        # TODO: Resolve agent dependency for TaskMasterInterface.
+        # This agent is crucial for TaskMasterCliTool to function.
+        logger.warning("TaskMasterInterface is being initialized with agent=None. "
+                       "This needs to be properly configured for full functionality.")
+        task_master_agent_placeholder = None
+        task_master_interface_config = orchestrator_config.get('task_master_interface', {})
+        task_master_interface = TaskMasterInterface(agent=task_master_agent_placeholder, config=task_master_interface_config)
+
+        results_processor_config = orchestrator_config.get('results_processor', {})
+        results_processor = ResultsProcessor(config=results_processor_config)
+        results_processor.task_master_interface = task_master_interface # Inject dependency
+
+        pool_manager_config = orchestrator_config.get('pool_manager', {})
+        pool_manager = PoolManager(config=pool_manager_config)
+
+        context_manager_config = orchestrator_config.get('context_manager', {})
+        context_manager = ContextManager(config=context_manager_config)
+        
+        engine_config = orchestrator_config.get('engine', {})
+        orchestration_engine = OrchestrationEngine(config=engine_config)
+        
+        orchestration_engine.register_components(
+            pool_manager=pool_manager,
+            context_manager=context_manager,
+            results_processor=results_processor
+        )
+        
+        PrintStyle().print("Starting Orchestration Engine loop...")
+        # Assuming orchestration_engine.run() is an async method that returns a summary or runs indefinitely
+        engine_loop_task = DeferredTask().start_task(orchestration_engine.run)
+        # TODO: Consider how to manage and potentially shut down this task gracefully with the app.
+        PrintStyle().print("Orchestration Engine setup complete.")
+
+    except Exception as e:
+        PrintStyle().error(f"Failed to initialize or start Orchestration Engine: {errors.format_error(e)}")
+        # Ensure orchestrator_config exists even if loading fails, though it's loaded earlier.
+        # This part of the try-except is more for the component initialization.
+        if 'orchestrator_config' not in locals():
+             orchestrator_config = {}
 
     server = None
 
