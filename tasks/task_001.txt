@@ -52,19 +52,19 @@ Follow Agent Zero's setup instructions, which typically include installing depen
 ### Details:
 Run the application and test core features according to the documentation. Create a checklist of essential functions that must continue working after the orchestrator integration.
 
-## 6. Design Orchestrator Architecture [pending]
+## 6. Design Orchestrator Architecture [done]
 ### Dependencies: 1.5
 ### Description: Create a detailed architecture design for how the Claude Code Orchestrator will extend Agent Zero.
 ### Details:
 Design the architecture including component diagrams, data flow, and integration points with Agent Zero. Define the core orchestrator components, their responsibilities, and how they interact with existing Agent Zero modules. Consider scalability, performance, and maintainability in the design.
 
-## 7. Create Project Structure for Orchestrator Extensions [pending]
+## 7. Create Project Structure for Orchestrator Extensions [done]
 ### Dependencies: 1.6
 ### Description: Implement the folder structure and base files needed for the orchestrator extensions.
 ### Details:
 Based on the architecture design, create the necessary directories and files for the orchestrator components. Follow Agent Zero's code organization patterns for consistency. Include placeholder files with appropriate comments to outline the implementation plan.
 
-## 8. Implement Core Orchestrator Components [pending]
+## 8. Implement Core Orchestrator Components [in-progress]
 ### Dependencies: 1.7
 ### Description: Develop the fundamental components of the Claude Code Orchestrator that will extend Agent Zero.
 ### Details:

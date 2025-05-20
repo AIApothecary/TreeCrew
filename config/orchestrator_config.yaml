@@ -1,0 +1,99 @@
+# Claude Code Orchestrator Configuration
+
+# General configuration
+general:
+  # Enable or disable the orchestrator
+  enabled: true
+  # Log level: debug, info, warning, error
+  log_level: info
+  # Base directory for storing orchestrator data
+  data_dir: "./data/orchestrator"
+  # Maximum number of concurrent tasks
+  max_concurrent_tasks: 5
+  # Timeout for task execution in seconds
+  task_timeout: 300
+
+# Agent Zero Worker Pool configuration
+worker_pool:
+  # Minimum number of workers in the pool
+  min_workers: 2
+  # Maximum number of workers in the pool
+  max_workers: 10
+  # Idle timeout for workers in seconds
+  idle_timeout: 60
+  # Worker initialization timeout in seconds
+  init_timeout: 30
+  # Worker configuration
+  worker_config:
+    # Default model for workers
+    default_model: "claude-3-opus-20240229"
+    # Maximum tokens for worker responses
+    max_tokens: 4096
+    # Temperature for worker responses
+    temperature: 0.7
+    # Whether to stream responses
+    stream: false
+
+# Context Manager configuration
+context_manager:
+  # Storage type: file, memory, database
+  storage_type: "file"
+  # Storage path for file-based storage
+  storage_path: "./data/orchestrator/context"
+  # Maximum context size in tokens
+  max_context_size: 100000
+  # Context retention period in days
+  retention_period: 7
+  # Enable context compression
+  enable_compression: true
+  # Compression level (1-9)
+  compression_level: 6
+
+# Results Processor configuration
+results_processor:
+  # Storage type: file, memory, database
+  storage_type: "file"
+  # Storage path for file-based storage
+  storage_path: "./data/orchestrator/results"
+  # Result retention period in days
+  retention_period: 30
+  # Enable result compression
+  enable_compression: true
+  # Compression level (1-9)
+  compression_level: 6
+  # Post-processing hooks
+  post_processing:
+    # Enable result summarization
+    summarize: true
+    # Enable result validation
+    validate: true
+    # Enable result formatting
+    format: true
+
+# Task Master CLI Tool configuration
+task_master_cli:
+  # Path to the task-master executable
+  executable_path: "task-master"
+  # Default task file path
+  default_task_file: "./tasks/tasks.json"
+  # Enable npx fallback
+  enable_npx_fallback: true
+  # NPX package name
+  npx_package_name: "task-master-ai"
+  # Command timeout in seconds
+  command_timeout: 60
+
+# Security configuration
+security:
+  # Enable authentication
+  enable_auth: false
+  # Authentication type: basic, token, oauth
+  auth_type: "basic"
+  # Authentication credentials file
+  auth_file: "./config/orchestrator_auth.yaml"
+  # Enable SSL/TLS
+  enable_ssl: false
+  # SSL certificate file
+  ssl_cert: "./config/ssl/cert.pem"
+  # SSL key file
+  ssl_key: "./config/ssl/key.pem"
