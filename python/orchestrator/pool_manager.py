@@ -13,6 +13,7 @@ import time
 import os
 
 from pydantic import SecretStr 
+from dotenv import load_dotenv # Import load_dotenv
 
 from .engine import TaskPackage, ResultPackage
 
@@ -20,6 +21,9 @@ from .engine import TaskPackage, ResultPackage
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage 
 from langchain_core.exceptions import OutputParserException
+
+# Load environment variables from .env file
+load_dotenv() # Call load_dotenv at module level
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -60,41 +64,51 @@ class AgentWorker:
         model_name: str = model_name_any 
 
         api_key_str: Optional[str] = None
-        effective_api_key_env_var = self.api_key_env_var
+        # The environment variable name to look for the API key
+        # This can be specified in the agent_profile via "api_key_env"
+        # or defaults to provider-specific common names.
+        effective_api_key_env_var_name: Optional[str] = self.api_key_env_var
         
         if provider == "anthropic":
-            if not effective_api_key_env_var: 
-                effective_api_key_env_var = "ANTHROPIC_API_KEY" 
-            api_key_str = os.environ.get(effective_api_key_env_var)
-            # Warning if not found, but proceed as ChatAnthropic might find it itself
+            if not effective_api_key_env_var_name: 
+                effective_api_key_env_var_name = "ANTHROPIC_API_KEY" # Default for Anthropic
+            api_key_str = os.environ.get(effective_api_key_env_var_name)
             if not api_key_str:
                  logger.warning(
-                    f"Anthropic API key string not found using env var '{effective_api_key_env_var}'. "
-                    f"ChatAnthropic will attempt to find it via its default mechanisms."
+                    f"Anthropic API key string not found using env var '{effective_api_key_env_var_name}'. "
+                    f"ChatAnthropic will attempt to find it via its default mechanisms if not passed explicitly."
                 )
         # elif provider == "openai":
-        #     # Similar logic for OpenAI
-        #     pass
+        #     if not effective_api_key_env_var_name:
+        #         effective_api_key_env_var_name = "OPENAI_API_KEY"
+        #     api_key_str = os.environ.get(effective_api_key_env_var_name)
+        #     if not api_key_str:
+        #         logger.warning(f"OpenAI API key string not found using env var '{effective_api_key_env_var_name}'.")
+        # else:
+        #     logger.warning(f"Provider '{provider}' specified, but no explicit API key env var name in profile and no default lookup configured here.")
         
         try:
             if provider == "anthropic":
-                client_args = {
+                client_args: Dict[str, Any] = { # Explicitly type client_args
                     "model_name": model_name,
                     "max_tokens_to_sample": self.agent_profile.get('max_tokens_to_sample', self.agent_profile.get('max_tokens', 4096)),
                     "temperature": self.agent_profile.get('temperature', 0.7),
                     "timeout": None,
                     "stop": None
                 }
-                if api_key_str: # Only pass api_key if we explicitly found one
-                    client_args["api_key"] = SecretStr(api_key_str)
+                if api_key_str: 
+                    client_args["api_key"] = SecretStr(api_key_str) # Use "api_key" alias
                 
                 self.ai_client = ChatAnthropic(**client_args)
                 logger.info(f"Anthropic client initialized for worker {self.worker_id} with model {model_name}")
 
             # elif provider == "openai":
             #     from langchain_openai import ChatOpenAI
-            #     # Similar conditional logic for api_key for OpenAI
-            #     self.ai_client = ChatOpenAI(model_name=model_name, ...)
+            #     client_args_openai: Dict[str, Any] = {"model_name": model_name, ...}
+            #     if api_key_str:
+            #         client_args_openai["api_key"] = SecretStr(api_key_str)
+            #     self.ai_client = ChatOpenAI(**client_args_openai)
+            #     logger.info(f"OpenAI client initialized for worker {self.worker_id} with model {model_name}")
             else:
                 logger.error(f"Unsupported model provider: {provider} for worker {self.worker_id}")
                 return False
