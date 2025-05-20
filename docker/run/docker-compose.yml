@@ -1,10 +1,7 @@
 services:
   agent-zero:
     container_name: agent-zero
-    image: frdel/agent-zero-run:testing
+    image: utpharmer/treecrew:latest
     volumes:
       - .:/a0
     ports:
-      - "50080:80"
-    env_file:
-      - ../.env

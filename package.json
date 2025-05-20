@@ -1,0 +1,25 @@
+{
+  "name": "treecrew",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "MCP Weather Server Example",
+  "devDependencies": {
+    "@types/node": "^22.15.18",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.11.3",
+    "axios": "^1.6.8",
+    "dotenv": "^16.4.5",
+    "openai": "^4.40.0",
+    "zod": "^3.24.4"
+  }
+}

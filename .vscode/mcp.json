@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "weather-server": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["build/index.js"]
+    }
+  }
+}

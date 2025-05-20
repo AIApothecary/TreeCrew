@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# Agent-Zero pattern: NO shell-level .env loading. Only Python loads .env at runtime.
-
 . "/ins/setup_venv.sh" "$@"
 . "/ins/copy_A0.sh" "$@"
 
